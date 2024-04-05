@@ -128,8 +128,10 @@ class threadGateway(ThreadWithStop):
                 message = self.queuesList["Critical"].get()
             elif not self.queuesList["Warning"].empty():
                 message = self.queuesList["Warning"].get()
-            elif not self.queuesList["Camera"].empty():
-                message = self.queuesList["Camera"].get()
+            # elif not self.queuesList['Points'].empty():
+            #     message = self.queuesList['Points'].get()
+            # elif not self.queuesList["Camera"].empty():
+            #     message = self.queuesList["Camera"].get()
             elif not self.queuesList["General"].empty():
                 message = self.queuesList["General"].get()
             if message is not None:

@@ -4,7 +4,7 @@ if __name__ == "__main__":
     sys.path.insert(0, "../../..")
 
 from src.templates.workerprocess import WorkerProcess
-from src.imageProcessing.laneDetection.threads.threadSegmentation import threadSegmentation
+from src.laneDetection.threads.threadSegmentation import threadSegmentation
 from multiprocessing import Pipe
 
 

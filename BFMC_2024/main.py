@@ -74,10 +74,10 @@ Steer = Value("i", 0)
 logging = logging.getLogger()
 
 # Pi Camera
-PiCamera = False
+PiCamera = True
 
 # Camera
-Camera = True
+Camera = False
 
 # Just false all when running
 TrafficCommunication = False
@@ -86,10 +86,10 @@ PCCommunicationDashboard = False
 CarsAndSemaphores = False
 
 # Serial Handler
-SerialHandler = False
+SerialHandler = True
   
 # Image Processing
-Segmentation = True
+Segmentation = False
 ObjectDetection = True
 
 # Server
@@ -99,7 +99,7 @@ Server = True
 ManualControl = False
 
 # CV control
-DecisionMaking = False
+DecisionMaking = True
 
 # Position Fusion
 PositionFusion = False
@@ -156,35 +156,35 @@ if SerialHandler:
     allProcesses.append(processSerialHandler)
 
 if ObjectDetection:
-    library = "./models/testv5/libmyplugins.so"
-    engine = "./models/testv5/yolov5s.engine"
+    library = "./models/v8/libmyplugins.so"
+    engine = "./models/v8/08-03-2024v8.engine"
     conf_thres = 0.6
     iou_thres = 0.4
-    # classes = [
-    #     "Car",
-    #     "CrossWalk",
-    #     "Greenlight",
-    #     "HighwayEnd",
-    #     "HighwayEntry",
-    #     "NoEntry",
-    #     "OneWay",
-    #     "Parking",
-    #     "Pedestrian",
-    #     "PriorityRoad",
-    #     "Redlight",
-    #     "Roundabout",
-    #     "Stop",
-    #     "Yellowlight",
-    # ]
-    classes = ["person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
-            "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
-            "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
-            "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
-            "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple",
-            "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch",
-            "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone",
-            "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear",
-            "hair drier", "toothbrush"]
+    classes = [
+        "Car",
+        "CrossWalk",
+        "Greenlight",
+        "HighwayEnd",
+        "HighwayEntry",
+        "NoEntry",
+        "OneWay",
+        "Parking",
+        "Pedestrian",
+        "PriorityRoad",
+        "Redlight",
+        "Roundabout",
+        "Stop",
+        "Yellowlight",
+    ]
+    # classes = ["person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
+    #         "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
+    #         "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
+    #         "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
+    #         "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple",
+    #         "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch",
+    #         "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone",
+    #         "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear",
+    #         "hair drier", "toothbrush"]
     processObjectDetection = processObjectDetection(
         queueList,
         logging,
@@ -202,16 +202,16 @@ if Segmentation:
     allProcesses.append(processSegmentation)
 
 if Server:
-    hostname = "192.168.0.100" # TX2 IP
-    port = 1234
-    kindofimages = ["MainCamera", "Segmentation", "ObjectDetectionImage", "MiddlePoint"]
-    kind = kindofimages[0]
+    hostname = "192.168.7.233" # TX2 IP
+    port = 12345
+    kindofimages = ["MainCamera", "ObjectDetectionImage", "MiddlePoint"]
+    kind = kindofimages[2]
     processServer1 = processServer(
         queueList, logging, hostname, port, kind, debugging=False
     )
     allProcesses.append(processServer1)
     port += 1
-    kind = kindofimages[2]
+    kind = kindofimages[1]
     processServer2 = processServer(
         queueList, logging, hostname, port, kind, debugging=False
     )
@@ -242,7 +242,7 @@ if ClearBuffer:
     allProcesses.append(processClearBuffer)
 
 if PiCamera:
-    SERVER_IP = '192.168.0.104' # Pi IP
+    SERVER_IP = '192.168.20.1' # Pi IP
     PORT = 1234
     processpiCamera = processpiCamera(serverip=SERVER_IP, port=PORT, queuesList=queueList, debugging=False)
     allProcesses.append(processpiCamera)

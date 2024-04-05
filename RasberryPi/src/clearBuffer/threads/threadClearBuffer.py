@@ -110,8 +110,11 @@ class threadClearBuffer(ThreadWithStop):
         """This function will run while the running flag is True. It captures the image from camera and make the required modifies and then it send the data to process gateway."""
         while self._running:
             start = time.time()
+            if not self.queuesList['Points'].empty():
+                message = self.queuesList['Points'].get()
             if not self.queuesList["Camera"].empty():
-                message = self.queuesList['Camera'].get()
+                message = self.queuesList["Camera"].get()
+            time.sleep(0.03)
             # print('Buffer: ', time.time() - start)
 
     # =============================== START ===============================================

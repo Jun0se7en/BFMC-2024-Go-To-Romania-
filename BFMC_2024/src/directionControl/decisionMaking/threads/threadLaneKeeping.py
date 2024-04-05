@@ -93,7 +93,7 @@ class threadLaneKeeping(ThreadWithStop):
 
     # ================================ RUN ================================================
     def run(self):
-        self.SPEED = 25
+        self.SPEED = 40
         self.prev_obj = ''
         self.extra_speed = 0
         self.swap_event = False
@@ -198,7 +198,9 @@ class threadLaneKeeping(ThreadWithStop):
                     right_points = list()
                     left_points = message['Left']
                     right_points = message['Right']
-                    image = message['Image']
+                    image_data = base64.b64decode(message['Image'])
+                    img = np.frombuffer(image_data, dtype=np.uint8)
+                    image = cv2.imdecode(img, cv2.IMREAD_COLOR)
                     # print(len(right_points))
                     # print(len(left_points))
 
@@ -285,7 +287,7 @@ class threadLaneKeeping(ThreadWithStop):
                                 cv2.circle(black_image, (np.int64(x2), i), 5, (0,0,255), -1)
                                 # print(f'x: {x2}, y: {i}')
                                 #################################################
-                                middle_point = np.int64(x2+Right_Offset-0.8*(i-240+1))
+                                middle_point = np.int64(x2+Right_Offset-0.55*(i-240+1))
                                 cv2.circle(black_image, (np.int64(middle_point), i), 5, (0,255,0), -1)
                                 middle_points.append([np.int64(middle_point),i])
                     ## Finding Only Left Lane
@@ -306,14 +308,14 @@ class threadLaneKeeping(ThreadWithStop):
                             x_left = np.roots([left_func[0], left_func[1], left_func[2]-i])
                             x1 = 99999
                             for j in x_left:
-                                if j>0 and x1>j and j>0:
+                                if j>0 and x1>j and j<320:
                                     x1 = j
                             # x1 = min(x_left[0], x_left[1])
                             if (np.abs(np.imag(x1)) < 1e-10) > 0:
                                 cv2.circle(black_image, (np.int64(x1), i), 5, (255,0,0), -1)
                                 # print(f'x: {x2}, y: {i}')
                                 ########################################
-                                middle_point = np.int64(x1+Left_Offset+0.8*(i-240+1))
+                                middle_point = np.int64(x1+Left_Offset+0.55*(i-240+1))
                                 cv2.circle(black_image, (np.int64(middle_point), i), 5, (0,255,0), -1)
                                 middle_points.append([np.int64(middle_point),i])
                     # print(middle_points)
@@ -417,8 +419,8 @@ class threadLaneKeeping(ThreadWithStop):
                     message = self.queuesList["Points"].get()
                     message = message['msgValue']
                     image = message['Image']
-                    _, encoded_img = cv2.imencode(".jpg", image)
-                    image_data_encoded = base64.b64encode(encoded_img).decode("utf-8")
+                    # _, encoded_img = cv2.imencode(".jpg", image)
+                    # image_data_encoded = base64.b64encode(encoded_img).decode("utf-8")
                     self.queuesList[MiddlePoint.Queue.value].put(
                     {
                         "Owner": MiddlePoint.Owner.value,

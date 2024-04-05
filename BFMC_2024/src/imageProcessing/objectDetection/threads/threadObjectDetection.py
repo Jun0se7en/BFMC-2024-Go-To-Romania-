@@ -122,48 +122,47 @@ class threadObjectDetection(ThreadWithStop):
     def run(self):
         """This function will run while the running flag is True. It captures the image from camera and make the required modifies and then it send the data to process gateway."""
         while self._running:
-            img = {"msgValue": 1}
-            while type(img["msgValue"]) != type(":text"):
+            if not self.queuesList["ObjectCamera"].empty():
                 img = self.queuesList["ObjectCamera"].get()
-            image_data = base64.b64decode(img["msgValue"])
-            img = np.frombuffer(image_data, dtype=np.uint8)
-            image = cv2.imdecode(img, cv2.IMREAD_COLOR)
-            frame = imutils.resize(image, width=600)
-            if (self.debugging):
-                # print("Yolo Detecting!!!")
-                res, t = self.model.infer(frame)
-            else:
-                res, t = self.model.infer(frame)
-            classes = []
-            areas = []
-            for i in res:
-                classes.append(i["class"])
-                x_min, y_min, x_max, y_max = i["box"]
-                # Calculate area of object
-                area = (x_max - x_min) * (y_max - y_min)
-                areas.append(area)
-            if (self.debugging):
-                _, encoded_img = cv2.imencode(".jpg", frame)
-                image_data_encoded = base64.b64encode(encoded_img).decode("utf-8")
-                msg = {"Image": image_data_encoded, "Class": classes, "Area": areas}
-            else:
-                msg = {"Image": None, "Class": classes, "Area": areas}
-            self.queuesList[ObjectDetection.Queue.value].put(
+                image_data = base64.b64decode(img["msgValue"])
+                img = np.frombuffer(image_data, dtype=np.uint8)
+                image = cv2.imdecode(img, cv2.IMREAD_COLOR)
+                frame = imutils.resize(image, width=600)
+                if (self.debugging):
+                    # print("Yolo Detecting!!!")
+                    res, t = self.model.infer(frame)
+                else:
+                    res, t = self.model.infer(frame)
+                classes = []
+                areas = []
+                for i in res:
+                    classes.append(i["class"])
+                    x_min, y_min, x_max, y_max = i["box"]
+                    # Calculate area of object
+                    area = (x_max - x_min) * (y_max - y_min)
+                    areas.append(area)
+                if (self.debugging):
+                    _, encoded_img = cv2.imencode(".jpg", frame)
+                    image_data_encoded = base64.b64encode(encoded_img).decode("utf-8")
+                    msg = {"Image": image_data_encoded, "Class": classes, "Area": areas}
+                else:
+                    msg = {"Image": None, "Class": classes, "Area": areas}
+                self.queuesList[ObjectDetection.Queue.value].put(
+                        {
+                            "Owner": ObjectDetection.Owner.value,
+                            "msgID": ObjectDetection.msgID.value,
+                            "msgType": ObjectDetection.msgType.value,
+                            "msgValue": msg,
+                        }
+                    )
+                self.queuesList[ObjectDetectionImage.Queue.value].put(
                     {
-                        "Owner": ObjectDetection.Owner.value,
-                        "msgID": ObjectDetection.msgID.value,
-                        "msgType": ObjectDetection.msgType.value,
+                        "Owner": ObjectDetectionImage.Owner.value,
+                        "msgID": ObjectDetectionImage.msgID.value,
+                        "msgType": ObjectDetectionImage.msgType.value,
                         "msgValue": msg,
                     }
                 )
-            self.queuesList[ObjectDetectionImage.Queue.value].put(
-                {
-                    "Owner": ObjectDetectionImage.Owner.value,
-                    "msgID": ObjectDetectionImage.msgID.value,
-                    "msgType": ObjectDetectionImage.msgType.value,
-                    "msgValue": msg,
-                }
-            )
 
     # =============================== START ===============================================
     def start(self):

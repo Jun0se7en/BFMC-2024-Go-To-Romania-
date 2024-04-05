@@ -15,7 +15,8 @@ from src.utils.messages.allMessages import (
     mainCamera,
     serialCamera,
     ObjectCamera,
-    SegmentCamera,
+    Intersection,
+    Points,
     Recording,
     Record,
     Config,
@@ -52,7 +53,6 @@ class threadpiCamera(ThreadWithStop):
     def run(self):
         """This function will run while the running flag is True. It captures the image from camera and make the required modifies and then it send the data to process gateway."""
         while self._running:
-            start = time.time()
             chunk = self.client_socket.recv(4*1024)
             if not chunk:
                 break
@@ -63,10 +63,17 @@ class threadpiCamera(ThreadWithStop):
             
             while len(self.data)<msg_size:
                 self.data+=self.client_socket.recv(4*1024)
-            image = self.data[:msg_size]
+            msg = self.data[:msg_size]
             self.data = self.data[msg_size:]
+            # print(len(image))
+            # start = time.time()
+            msg = pickle.loads(msg)
+            image = msg['Image']
+            intersection = msg['Intersection']
+            left_points = msg['Left']
+            right_points = msg['Right']
             
-            image = pickle.loads(image)
+            # print('Decode: ', time.time()-start)
             self.queuesList[mainCamera.Queue.value].put(
                 {
                     "Owner": mainCamera.Owner.value,
@@ -83,20 +90,26 @@ class threadpiCamera(ThreadWithStop):
                     "msgValue": image,
                 }
             )
-            self.queuesList[SegmentCamera.Queue.value].put(
+            self.queuesList[Intersection.Queue.value].put(
                 {
-                    "Owner": SegmentCamera.Owner.value,
-                    "msgID": SegmentCamera.msgID.value,
-                    "msgType": SegmentCamera.msgType.value,
-                    "msgValue": image,
-                }
-            )
-            
-            print('Received: ', time.time() - start)
-
+                    "Owner": Intersection.Owner.value,
+                    "msgID": Intersection.msgID.value,
+                    "msgType": Intersection.msgType.value,
+                    "msgValue": intersection,
+                })
+            self.queuesList[Points.Queue.value].put(
+                {
+                    "Owner": Points.Owner.value,
+                    "msgID": Points.msgID.value,
+                    "msgType": Points.msgType.value,
+                    "msgValue": {'Left': left_points, 'Right': right_points, 'Image': image},
+                })
+            # print('Delay: ', time.time() - msg['Sending Time'])
     # =============================== START ===============================================
     def start(self):
+        print('Waiting!!!!!!')
         time.sleep(25)
+        print('Done!!!!!')
         super(threadpiCamera, self).start()
 
         

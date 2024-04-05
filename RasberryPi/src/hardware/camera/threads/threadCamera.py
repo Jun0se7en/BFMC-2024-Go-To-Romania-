@@ -61,8 +61,8 @@ class threadCamera(ThreadWithStop):
         self.pipeSendConfig = pipeSend
         self.debugger = debugger
         self.frame_rate = 5
-        self.width = 320.0
-        self.height = 240.0
+        self.width = 640.0
+        self.height = 360.0
         self.recording = False
         pipeRecvRecord, pipeSendRecord = Pipe(duplex=False)
         self.pipeRecvRecord = pipeRecvRecord
@@ -70,7 +70,7 @@ class threadCamera(ThreadWithStop):
         self.video_writer = ""
         self.subscribe()
         # self._init_cv_camera()
-        self._init_camera()
+        self._init_cv_camera()
         self.Queue_Sending()
         self.Configs()
 
@@ -132,10 +132,27 @@ class threadCamera(ThreadWithStop):
         """This function will run while the running flag is True. It captures the image from camera and make the required modifies and then it send the data to process gateway."""
         while self._running:
             start = time.time()
-            request2 = self.camera.capture_array("main")
-            # print(request2.shape)
-            request2 = cv2.resize(request2,(320,240))
-            _, encoded_img = cv2.imencode(".jpg", request2)
+            # Pi Camera
+            # request2 = self.camera.capture_array("main")
+            # # print(request2.shape)
+            # request2 = cv2.resize(request2,(320,240))
+            # _, encoded_img = cv2.imencode(".jpg", request2)
+            # image_data_encoded = base64.b64encode(encoded_img).decode("utf-8")
+            # self.queuesList[serialCamera.Queue.value].put(
+            #     {
+            #         "Owner": serialCamera.Owner.value,
+            #         "msgID": serialCamera.msgID.value,
+            #         "msgType": serialCamera.msgType.value,
+            #         "msgValue": image_data_encoded,
+            #     }
+            # ) 
+
+            # Cam CV
+            ret, request = self.camera.read()
+            if not ret:
+                print("Read failed")
+                self.stop()
+            _, encoded_img = cv2.imencode(".jpg", request)
             image_data_encoded = base64.b64encode(encoded_img).decode("utf-8")
             self.queuesList[serialCamera.Queue.value].put(
                 {
@@ -144,7 +161,7 @@ class threadCamera(ThreadWithStop):
                     "msgType": serialCamera.msgType.value,
                     "msgValue": image_data_encoded,
                 }
-            )
+            ) 
             # print('Camera: ', time.time()-start)
 
     # =============================== START ===============================================
@@ -159,3 +176,11 @@ class threadCamera(ThreadWithStop):
         camera_config = self.camera.create_still_configuration(buffer_count=30, queue=False, main={"format": "XRGB8888", "size": (320,240)})
         self.camera.configure(camera_config)
         self.camera.start()
+    
+    def _init_cv_camera(self):
+        self.camera = cv2.VideoCapture(0, cv2.CAP_GSTREAMER)
+        self.camera.set(cv2.CAP_PROP_BUFFERSIZE, 30)
+        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
+        self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
+        if not self.camera.isOpened():
+            print("Capture failed")

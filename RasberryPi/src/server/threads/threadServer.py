@@ -36,6 +36,7 @@ import os
 from multiprocessing import Pipe
 from src.utils.messages.allMessages import (
     serialCamera,
+    Points,
     Recording,
     Record,
     Config,
@@ -56,7 +57,7 @@ class threadServer(ThreadWithStop):
     """
 
     # ================================ INIT ===============================================
-    def __init__(self, pipeRecv, pipeSend, queuesList, logger, socket, address, server, kind, debugger):
+    def __init__(self, pipeRecv, pipeSend, queuesList, logger, socket, address, server, debugger):
         super(threadServer, self).__init__()
         self.queuesList = queuesList
         self.logger = logger
@@ -68,18 +69,13 @@ class threadServer(ThreadWithStop):
         pipeRecvRecord, pipeSendRecord = Pipe(duplex=False)
         self.pipeRecvRecord = pipeRecvRecord
         self.pipeSendRecord = pipeSendRecord
-        pipeRecvCamera, pipeSendCamera = Pipe(duplex=False)
-        self.pipeRecvCamera = pipeRecvCamera
-        self.pipeSendCamera = pipeSendCamera
+        pipeRecvPoints, pipeSendPoints = Pipe(duplex=False)
+        self.pipeRecvPoints = pipeRecvPoints
+        self.pipeSendPoints = pipeSendPoints
         self.video_writer = ""
         self.server = server
         self.socket = socket
         self.address = address
-        if (kind in ['Camera']):
-            self.kind = kind
-        else:
-            print('Wrong Kind of Image!!!')
-            self.stop()
         self.subscribe()
         self.Queue_Sending()
         self.Configs()
@@ -92,7 +88,7 @@ class threadServer(ThreadWithStop):
                 "Subscribe/Unsubscribe": "subscribe",
                 "Owner": Record.Owner.value,
                 "msgID": Record.msgID.value,
-                "To": {"receiver": "threadImageProcessing", "pipe": self.pipeSendRecord},
+                "To": {"receiver": "threadServer", "pipe": self.pipeSendRecord},
             }
         )
         self.queuesList["Config"].put(
@@ -100,15 +96,15 @@ class threadServer(ThreadWithStop):
                 "Subscribe/Unsubscribe": "subscribe",
                 "Owner": Config.Owner.value,
                 "msgID": Config.msgID.value,
-                "To": {"receiver": "threadImageProcessing", "pipe": self.pipeSendConfig},
+                "To": {"receiver": "threadServer", "pipe": self.pipeSendConfig},
             }
         )
         self.queuesList["Config"].put(
             {
                 "Subscribe/Unsubscribe": "subscribe",
-                "Owner": serialCamera.Owner.value,
-                "msgID": serialCamera.msgID.value,
-                "To": {"receiver": "threadImageProcessing", "pipe": self.pipeSendCamera},
+                "Owner": Points.Owner.value,
+                "msgID": Points.msgID.value,
+                "To": {"receiver": "threadServer", "pipe": self.pipeSendPoints},
             }
         )
 
@@ -147,20 +143,16 @@ class threadServer(ThreadWithStop):
         """This function will run while the running flag is True. It captures the image from camera and make the required modifies and then it send the data to process gateway."""
         while self._running:
             start = time.time()
-            if self.pipeRecvCamera.poll():
-                msg = self.pipeRecvCamera.recv()
-                msg = msg["value"]
-                # image_data = base64.b64decode(img)
-                # img = np.frombuffer(image_data, dtype=np.uint8)
-                # image = cv2.imdecode(img, cv2.IMREAD_COLOR)
-                # image = cv2.resize(image,(160,120))
-                if (self.debugger):
-                    print('Received: ', time.time()-start)
-                    print('Got', self.kind, ' image')
+            # if self.pipeRecvPoints.poll():
+            #     msg = self.pipeRecvPoints.recv()
+            #     msg = msg["value"]
+            if not self.queuesList['Points'].empty():
+                msg = self.queuesList['Points'].get()
+                msg = msg['msgValue']
                 start = time.time()
-                image_bytes = pickle.dumps(msg)
-                print('Encode: ', time.time()-start)
-                message = struct.pack("Q", len(image_bytes))+image_bytes
+                data_bytes = pickle.dumps(msg)
+                # print('Encode: ', time.time()-start)
+                message = struct.pack("Q", len(data_bytes))+data_bytes
                 self.socket.sendall(message)
                 if (self.debugger):
                     print('Sending Time: ', time.time()-start)

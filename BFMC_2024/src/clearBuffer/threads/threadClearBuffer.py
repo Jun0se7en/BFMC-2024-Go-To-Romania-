@@ -118,18 +118,18 @@ class threadClearBuffer(ThreadWithStop):
                     message = self.queuesList["LaneDetection"].get()
                 if not self.queuesList['Intersection'].empty():
                     message = self.queuesList['Intersection'].get()
-                # if not self.queuesList['MiddlePoint'].empty():
-                #     message = self.queuesList['MiddlePoint'].get()
+                if not self.queuesList['MiddlePoint'].empty():
+                    message = self.queuesList['MiddlePoint'].get()
             if not self.queuesList['ObjectDetectionImage'].empty():
                 message = self.queuesList['ObjectDetectionImage'].get()
             if not self.queuesList["ObjectDetection"].empty():
                 message = self.queuesList["ObjectDetection"].get()
             if not self.queuesList["MainCamera"].empty():
                 message = self.queuesList["MainCamera"].get()
-                if not self.queuesList["SegmentCamera"].empty():
-                    message = self.queuesList["SegmentCamera"].get()
-                if not self.queuesList["ObjectCamera"].empty():
-                    message = self.queuesList["ObjectCamera"].get()
+            if not self.queuesList["SegmentCamera"].empty():
+                message = self.queuesList["SegmentCamera"].get()
+            if not self.queuesList["ObjectCamera"].empty():
+                message = self.queuesList["ObjectCamera"].get()
             # print('Buffer: ', time.time() - start)
 
     # =============================== START ===============================================

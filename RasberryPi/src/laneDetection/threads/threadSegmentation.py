@@ -8,19 +8,16 @@ import matplotlib.pyplot as plt
 from collections import Counter
 from multiprocessing import Pipe
 from src.utils.messages.allMessages import (
-    MiddlePoint,
+    serialCamera,
     Points,
-    Intersection,
-    Segmentation,
-    LaneDetectionMsg,
     Record,
     Config,
 )
 from src.templates.threadwithstop import ThreadWithStop
-from src.imageProcessing.laneDetection.utils import utils_action
-from src.imageProcessing.laneDetection import ImagePreprocessing
-from src.imageProcessing.laneDetection import IntersectionDetection
-from src.imageProcessing.laneDetection import LaneDetection
+from src.laneDetection.utils import utils_action
+from src.laneDetection import ImagePreprocessing
+from src.laneDetection import IntersectionDetection
+from src.laneDetection import LaneDetection
 
 # Use this thread for LaneLine Segmentation
 class threadSegmentation(ThreadWithStop):
@@ -43,6 +40,9 @@ class threadSegmentation(ThreadWithStop):
         pipeRecvRecord, pipeSendRecord = Pipe(duplex=False)
         self.pipeRecvRecord = pipeRecvRecord
         self.pipeSendRecord = pipeSendRecord
+        pipeRecvCamera, pipeSendCamera = Pipe(duplex=False)
+        self.pipeRecvCamera = pipeRecvCamera
+        self.pipeSendCamera = pipeSendCamera
         self.subscribe()
         self.Configs()
         self._init_segment()
@@ -64,6 +64,14 @@ class threadSegmentation(ThreadWithStop):
                 "Owner": Config.Owner.value,
                 "msgID": Config.msgID.value,
                 "To": {"receiver": "threadSegmentation", "pipe": self.pipeSendConfig},
+            }
+        )
+        self.queuesList["Config"].put(
+            {
+                "Subscribe/Unsubscribe": "subscribe",
+                "Owner": serialCamera.Owner.value,
+                "msgID": serialCamera.msgID.value,
+                "To": {"receiver": "threadSegmentation", "pipe": self.pipeSendCamera},
             }
         )
 
@@ -97,13 +105,15 @@ class threadSegmentation(ThreadWithStop):
     # ================================ RUN ================================================
     def run(self):
         """This function will run while the running flag is True. It captures the image from camera and make the required modifies and then it send the data to process gateway."""
-        var = True
         while self._running:
-            if var:
-                img = {"msgValue": 1}
-                while type(img["msgValue"]) != type(":text"):
-                    img = self.queuesList["SegmentCamera"].get()    # Get image from camera
-                image_data = base64.b64decode(img["msgValue"])
+            start = time.time()
+            # if self.pipeRecvCamera.poll():
+            #     msg = self.pipeRecvCamera.recv()
+                # msg = msg['value']
+            if not self.queuesList['Camera'].empty():
+                msg = self.queuesList['Camera'].get()
+                msg = msg["msgValue"]
+                image_data = base64.b64decode(msg)
                 img = np.frombuffer(image_data, dtype=np.uint8)     
                 image = cv2.imdecode(img, cv2.IMREAD_COLOR)
                 check_thresh = self.opt['INTERSECT_DETECTION']
@@ -127,36 +137,9 @@ class threadSegmentation(ThreadWithStop):
                     "Owner": Points.Owner.value,
                     "msgID": Points.msgID.value,
                     "msgType": Points.msgType.value,
-                    "msgValue": {'Left': left_points, 'Right': right_points, 'Image': image},
+                    "msgValue": {'Left': left_points, 'Right': right_points, 'Intersection': check_intersection[0], 'Image': msg, 'Sending Time': start},
                 })
                 
-                max_lines = check_intersection[1]['max_points']
-                new_im = self.display_points((left_points), image, 0)
-                new_im = self.display_points((right_points), image, 1)
-                for i in max_lines:
-                    cv2.circle(new_im, (i[0], i[1] + crop_height_value), 1, (0, 255, 0), -1)
-                    
-                # Send image to queue
-                _, encoded_img = cv2.imencode(".jpg", new_im)
-                image_data_encoded = base64.b64encode(encoded_img).decode("utf-8")
-
-                self.queuesList[Intersection.Queue.value].put(
-                {
-                    "Owner": Intersection.Owner.value,
-                    "msgID": Intersection.msgID.value,
-                    "msgType": Intersection.msgType.value,
-                    "msgValue": check_intersection[0],
-                })
-                # Send image segmentation
-                self.queuesList[Segmentation.Queue.value].put(
-                    {
-                        "Owner": Segmentation.Owner.value,
-                        "msgID": Segmentation.msgID.value,
-                        "msgType": Segmentation.msgType.value,
-                        "msgValue": image_data_encoded,
-                    }
-                )
-            var = not var
 
     # =============================== START ===============================================
     def start(self):

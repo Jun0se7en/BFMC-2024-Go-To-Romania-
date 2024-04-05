@@ -56,6 +56,12 @@ class Signal(Enum):
     msgID = 4
     msgType = "String"
 
+class Points(Enum):
+    Queue = 'Points'
+    Owner = 'threadSegmentation'
+    msgID = 5
+    msgType = 'dictionary'
+
 
 ################################# processCarsAndSemaphores ##################################
 class Cars(Enum):

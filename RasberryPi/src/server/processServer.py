@@ -53,8 +53,8 @@ class processServer(WorkerProcess):
     """
 
     # ====================================== INIT ==========================================
-    def __init__(self, queueList, logging, hostname, port, kind, debugging=False):
-        print(f'Initializing Server {kind} Process!!!')
+    def __init__(self, queueList, logging, hostname, port, debugging=False):
+        print(f'Initializing Server Process!!!')
         self.queuesList = queueList
         self.logging = logging
         pipeRecv, pipeSend = Pipe(duplex=False)
@@ -64,11 +64,10 @@ class processServer(WorkerProcess):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.hostname = hostname
         self.port = port
-        self.kind = kind
         self.socket.bind((self.hostname, self.port))
         print(self.hostname)
         super(processServer, self).__init__(self.queuesList)
-        print(f'Initialized Server {kind} Process Sucessfully!!!')
+        print(f'Initialized Server Process Sucessfully!!!')
 
     # ===================================== STOP ==========================================
     def stop(self):
@@ -88,7 +87,7 @@ class processServer(WorkerProcess):
         while self._running:
             clientsocket, Address = self.socket.accept()
             print(f'IP Address [{Address}] has connect to the server!!!')
-            ServerTh = threadServer(self.pipeRecv, self.pipeSend, self.queuesList, self.logging, clientsocket, Address, self, self.kind, self.debugging)
+            ServerTh = threadServer(self.pipeRecv, self.pipeSend, self.queuesList, self.logging, clientsocket, Address, self, self.debugging)
             ServerTh.start()
 
 

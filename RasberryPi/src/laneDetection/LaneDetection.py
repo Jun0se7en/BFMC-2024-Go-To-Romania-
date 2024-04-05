@@ -2,8 +2,8 @@ import numpy as np
 import math
 import cv2
 from collections import defaultdict
-from src.imageProcessing.laneDetection.utils import utils_action as action
-from src.imageProcessing.laneDetection import ImagePreprocessing
+from src.laneDetection.utils import utils_action as action
+from src.laneDetection import ImagePreprocessing
 class LaneDetection:
     def __init__(self, opt):
         self.opt = opt["LANE_KEEPING"]
