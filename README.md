@@ -12,6 +12,10 @@ This project contains the full software stack that powers our autonomous vehicle
 - **Localization**: Fusing sensor data (camera, encoder, IMU) for accurate position estimation.
 - **Traffic Handling**: Task sequencing and decision-making logic for competition scenarios.
 
+## ✅ **Demo Videos**
+
+- 🚘 Real-world Demo: [Watch here](https://youtu.be/real-world-demo)
+
 ## 📦 Folder Structure
 
 ```bash
@@ -24,6 +28,3 @@ This project contains the full software stack that powers our autonomous vehicle
 │   └── tools/                # Helper functions, constants, visualization tools
 ├── RasberryPi/   # Provide Multithreading Code for RasberryPi
 
-## ✅ **Demo Videos**
-
-- 🚘 Real-world Demo: [Watch here](https://youtu.be/real-world-demo)
