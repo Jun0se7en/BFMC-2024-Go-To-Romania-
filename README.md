@@ -14,7 +14,7 @@ This project contains the full software stack that powers our autonomous vehicle
 
 ## ✅ **Demo Videos**
 
-- 🚘 Real-world Demo: [Watch here](https://youtu.be/real-world-demo)
+- 🚘 Demo: [Watch here](https://youtu.be/real-world-demo)
 
 ## 📦 Folder Structure
 
